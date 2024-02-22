@@ -56,3 +56,14 @@ target_link_libraries(ReplicaRenderer
                       ptex
                       stdc++fs
 )
+
+add_executable(ReplicaCapturer src/capture.cpp src/MirrorSurface.cpp)
+
+target_link_libraries(ReplicaCapturer
+                      ${Pangolin_LIBRARIES}
+                      ${dl_LIBRARIES}
+                      GL
+                      GLEW
+                      ptex
+                      stdc++fs
+)

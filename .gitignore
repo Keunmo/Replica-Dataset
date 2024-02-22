@@ -1,3 +1,9 @@
+*.zip
+replica_v1/
+replica_v1*
+.vscode
+output/
+output
 build
 *~
 *.swp

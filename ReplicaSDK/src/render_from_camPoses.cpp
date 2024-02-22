@@ -1,11 +1,15 @@
 // Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+// render from camPose.txt
 #include <EGL.h>
 #include <PTexLib.h>
 #include <pangolin/image/image_convert.h>
+#include <fstream>
+#include <experimental/filesystem>
 
 #include "GLCheck.h"
 #include "MirrorRenderer.h"
 
+namespace fs = std::experimental::filesystem;
 
 int main(int argc, char* argv[]) {
   ASSERT(argc == 3 || argc == 4, "Usage: ./ReplicaRenderer mesh.ply /path/to/atlases [mirrorFile]");
@@ -15,6 +19,13 @@ int main(int argc, char* argv[]) {
   ASSERT(pangolin::FileExists(meshFile));
   ASSERT(pangolin::FileExists(atlasFolder));
 
+  std::ifstream camPoses("/home/keunmo/workspace/Replica-Dataset/output/apartment_1_cam_arr1/camPose.txt");
+  std::string outFolder = "/home/keunmo/workspace/Replica-Dataset/output/apartment_1_cam_arr1";
+  // if (!fs::exists(outFolder)) {
+  //   fs::create_directory(outFolder);
+  fs::create_directory(outFolder+"/images");
+  fs::create_directory(outFolder+"/depths");
+  // }
   std::string surfaceFile;
   if (argc == 4) {
     surfaceFile = std::string(argv[3]);
@@ -61,13 +72,12 @@ int main(int argc, char* argv[]) {
       pangolin::ModelViewLookAtRDF(0, 0, 4, 0, 0, 0, 0, 1, 0));
 
   // Start at some origin
-  Eigen::Matrix4d T_camera_world = s_cam.GetModelViewMatrix();
-  // 
+  // Eigen::Matrix4d T_camera_world = s_cam.GetModelViewMatrix();
 
   // And move to the left
-  Eigen::Matrix4d T_new_old = Eigen::Matrix4d::Identity();
+  // Eigen::Matrix4d T_new_old = Eigen::Matrix4d::Identity();
 
-  T_new_old.topRightCorner(3, 1) = Eigen::Vector3d(0.025, 0, 0);
+  // T_new_old.topRightCorner(3, 1) = Eigen::Vector3d(0.025, 0, 0);
 
   // load mirrors
   std::vector<MirrorSurface> mirrors;
@@ -93,11 +103,35 @@ int main(int argc, char* argv[]) {
   pangolin::ManagedImage<uint16_t> depthImageInt(width, height);
 
   // Render some frames
-  const size_t numFrames = 100;
-  for (size_t i = 0; i < numFrames; i++) {
-    std::cout << "\rRendering frame " << i + 1 << "/" << numFrames << "... ";
-    std::cout.flush();
+  // const size_t numFrames = 100;
+  // for (size_t i = 0; i < numFrames; i++) {
+  std::string frameId;
+  double m00, m01, m02, m03;
+  double m10, m11, m12, m13;
+  double m20, m21, m22, m23;
+  double m30, m31, m32, m33;
+  while (camPoses >> frameId >> m00 >> m01 >> m02 >> m03 >> m10 >> m11 >> m12 >> m13 >> m20 >> m21 >> m22 >> m23 >> m30 >> m31 >> m32 >> m33) {
+    std::cout << "\rRendering frame" << frameId << std::endl;
+    // std::cout.flush();
+    Eigen::Matrix4d T_camera_world = Eigen::Matrix4d::Identity();
+    T_camera_world(0, 0) = m00;
+    T_camera_world(0, 1) = m01;
+    T_camera_world(0, 2) = m02;
+    T_camera_world(0, 3) = m03;
+    T_camera_world(1, 0) = m10;
+    T_camera_world(1, 1) = m11;
+    T_camera_world(1, 2) = m12;
+    T_camera_world(1, 3) = m13;
+    T_camera_world(2, 0) = m20;
+    T_camera_world(2, 1) = m21;
+    T_camera_world(2, 2) = m22;
+    T_camera_world(2, 3) = m23;
+    T_camera_world(3, 0) = m30;
+    T_camera_world(3, 1) = m31;
+    T_camera_world(3, 2) = m32;
+    T_camera_world(3, 3) = m33;
 
+    s_cam.GetModelViewMatrix() = T_camera_world;
     // Render
     frameBuffer.Bind();
     glPushAttrib(GL_VIEWPORT_BIT);
@@ -133,7 +167,7 @@ int main(int argc, char* argv[]) {
     render.Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
 
     char filename[1000];
-    snprintf(filename, 1000, "frame%06zu.jpg", i);
+    snprintf(filename, 1000, "%s/images/frame%s.jpg", outFolder.c_str(), frameId.c_str());
 
     pangolin::SaveImage(
         image.UnsafeReinterpret<uint8_t>(),
@@ -162,19 +196,19 @@ int main(int argc, char* argv[]) {
       for(size_t i = 0; i < depthImage.Area(); i++)
           depthImageInt[i] = static_cast<uint16_t>(depthImage[i] + 0.5f);
 
-      snprintf(filename, 1000, "depth%06zu.png", i);
+      snprintf(filename, 1000, "%s/depths/depth%s.png", outFolder.c_str(), frameId.c_str());
       pangolin::SaveImage(
           depthImageInt.UnsafeReinterpret<uint8_t>(),
           pangolin::PixelFormatFromString("GRAY16LE"),
           std::string(filename), true, 34.0f);
     }
 
-    // Move the camera
-    T_camera_world = T_camera_world * T_new_old.inverse();
+    // // Move the camera
+    // T_camera_world = T_camera_world * T_new_old.inverse();
 
-    s_cam.GetModelViewMatrix() = T_camera_world;
+    // s_cam.GetModelViewMatrix() = T_camera_world;
   }
-  std::cout << "\rRendering frame " << numFrames << "/" << numFrames << "... done" << std::endl;
+  // std::cout << "\rRendering frame " << numFrames << "/" << numFrames << "... done" << std::endl;
 
   return 0;
 }
