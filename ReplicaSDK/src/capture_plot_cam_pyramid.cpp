@@ -309,7 +309,7 @@ int main(int argc, char* argv[]) {
 
   // load cam pose write file
   // std::ofstream camPoseFile;
-  std::ifstream camPoseFile("/home/keunmo/workspace/Replica-Dataset/output/room_0_slam1/camPose.txt");
+  std::ifstream camPoseFile("/home/keunmo/workspace/Replica-Dataset/output/apartment_0_slam1/camPose.txt");
 
   // std::string camPoseFileName = outFolder + "/camPose.txt";
   // camPoseFile.open(outFolder + "/camPose.txt");
@@ -328,25 +328,26 @@ int main(int argc, char* argv[]) {
   double m30, m31, m32, m33;
   while (camPoseFile >> frameId >> m00 >> m01 >> m02 >> m03 >> m10 >> m11 >> m12 >> m13 >> m20 >> m21 >> m22 >> m23 >> m30 >> m31 >> m32 >> m33) {
     // std::cout << "\rRendering frame" << frameId << std::endl;
-    // Eigen::Matrix4d T_camera_world = Eigen::Matrix4d::Identity();
-    pangolin::OpenGlMatrix T_camera_world;
-    T_camera_world(0, 0) = m00;
-    T_camera_world(0, 1) = m01;
-    T_camera_world(0, 2) = m02;
-    T_camera_world(0, 3) = m03;
-    T_camera_world(1, 0) = m10;
-    T_camera_world(1, 1) = m11;
-    T_camera_world(1, 2) = m12;
-    T_camera_world(1, 3) = m13;
-    T_camera_world(2, 0) = m20;
-    T_camera_world(2, 1) = m21;
-    T_camera_world(2, 2) = m22;
-    T_camera_world(2, 3) = m23;
-    T_camera_world(3, 0) = m30;
-    T_camera_world(3, 1) = m31;
-    T_camera_world(3, 2) = m32;
-    T_camera_world(3, 3) = m33;
-    camPoses.push_back(T_camera_world.Inverse());
+    // Eigen::Matrix4d CamPose = Eigen::Matrix4d::Identity();
+    pangolin::OpenGlMatrix CamPose;
+    CamPose(0, 0) = m00;
+    CamPose(0, 1) = m01;
+    CamPose(0, 2) = m02;
+    CamPose(0, 3) = m03;
+    CamPose(1, 0) = m10;
+    CamPose(1, 1) = m11;
+    CamPose(1, 2) = m12;
+    CamPose(1, 3) = m13;
+    CamPose(2, 0) = m20;
+    CamPose(2, 1) = m21;
+    CamPose(2, 2) = m22;
+    CamPose(2, 3) = m23;
+    CamPose(3, 0) = m30;
+    CamPose(3, 1) = m31;
+    CamPose(3, 2) = m32;
+    CamPose(3, 3) = m33;
+    // camPoses.push_back(CamPose.Inverse());
+    camPoses.push_back(CamPose);
   }
   while (!pangolin::ShouldQuit()) {
     // debug
@@ -418,7 +419,7 @@ int main(int argc, char* argv[]) {
         // DrawCurrentCamera(s_cam.GetModelViewMatrix());
         camPoses.push_back(s_cam.GetModelViewMatrix().Inverse());
         std::cout << "Capture frame " << std::setfill('0') << std::setw(6) << frameCnt << std::endl;
-        std::cout << "Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
+        // std::cout << "Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
         std::cout << "Cam Pose(W2C):\n" << s_cam.GetModelViewMatrix().Inverse() << std::endl;
         std::cout.flush();
 

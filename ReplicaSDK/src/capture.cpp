@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
   //     pangolin::ProjectionMatrix(width, height, width / 2.0f, width / 2.0f, width / 2.0f, height / 2.0f, 0.1f, 100.0f),
   //     pangolin::ModelViewLookAt(0, -4, -0.01, 0, 0, 0, 0, -1, 0)
   // );
-  std::cout << "Initial Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
+  // std::cout << "Initial Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
   // get rotation matrix
   // Eigen::Matrix3d R = s_cam.GetModelViewMatrix().topLeftCorner(3, 3);
   // get translation vector
@@ -320,6 +320,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Failed to open cam pose file: " << outFolder + "/camPose.txt" << std::endl;
     return 1;
   }
+  else{
+    // write comments: # frameId world2camPose
+    camPoseFile << "# frameId World2CamPose(4x4 matrix, row order)" << std::endl;
+  }
   int frameCnt = 0;
   std::vector<pangolin::OpenGlMatrix> camPoses;
 
@@ -392,7 +396,7 @@ int main(int argc, char* argv[]) {
         // DrawCurrentCamera(s_cam.GetModelViewMatrix());
         camPoses.push_back(s_cam.GetModelViewMatrix().Inverse());
         std::cout << "Capture frame " << std::setfill('0') << std::setw(6) << frameCnt << std::endl;
-        std::cout << "Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
+        // std::cout << "Cam Pose(C2W):\n" << s_cam.GetModelViewMatrix() << std::endl;
         std::cout << "Cam Pose(W2C):\n" << s_cam.GetModelViewMatrix().Inverse() << std::endl;
         std::cout.flush();
 
@@ -445,7 +449,7 @@ int main(int argc, char* argv[]) {
           std::string(filename));
 
         // write campose
-        Eigen::Matrix4d world2camPose = s_cam.GetModelViewMatrix();  // camera to world.
+        Eigen::Matrix4d world2camPose = s_cam.GetModelViewMatrix().Inverse();  // world. to camera
         camPoseFile << std::setfill('0') << std::setw(6) << frameCnt << " ";
         camPoseFile << world2camPose(0, 0) << " " << world2camPose(0, 1) << " " << world2camPose(0, 2) << " " << world2camPose(0, 3) << " "
                     << world2camPose(1, 0) << " " << world2camPose(1, 1) << " " << world2camPose(1, 2) << " " << world2camPose(1, 3) << " "

@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
       pangolin::ModelViewLookAtRDF(0, 0, 4, 0, 0, 0, 0, 1, 0));
 
   // Start at some origin
-  // Eigen::Matrix4d T_camera_world = s_cam.GetModelViewMatrix();
+  // Eigen::Matrix4d world2cam = s_cam.GetModelViewMatrix();
 
   // And move to the left
   // Eigen::Matrix4d T_new_old = Eigen::Matrix4d::Identity();
@@ -113,25 +113,26 @@ int main(int argc, char* argv[]) {
   while (camPoses >> frameId >> m00 >> m01 >> m02 >> m03 >> m10 >> m11 >> m12 >> m13 >> m20 >> m21 >> m22 >> m23 >> m30 >> m31 >> m32 >> m33) {
     std::cout << "\rRendering frame" << frameId << std::endl;
     // std::cout.flush();
-    Eigen::Matrix4d T_camera_world = Eigen::Matrix4d::Identity();
-    T_camera_world(0, 0) = m00;
-    T_camera_world(0, 1) = m01;
-    T_camera_world(0, 2) = m02;
-    T_camera_world(0, 3) = m03;
-    T_camera_world(1, 0) = m10;
-    T_camera_world(1, 1) = m11;
-    T_camera_world(1, 2) = m12;
-    T_camera_world(1, 3) = m13;
-    T_camera_world(2, 0) = m20;
-    T_camera_world(2, 1) = m21;
-    T_camera_world(2, 2) = m22;
-    T_camera_world(2, 3) = m23;
-    T_camera_world(3, 0) = m30;
-    T_camera_world(3, 1) = m31;
-    T_camera_world(3, 2) = m32;
-    T_camera_world(3, 3) = m33;
+    Eigen::Matrix4d world2cam = Eigen::Matrix4d::Identity();
+    world2cam(0, 0) = m00;
+    world2cam(0, 1) = m01;
+    world2cam(0, 2) = m02;
+    world2cam(0, 3) = m03;
+    world2cam(1, 0) = m10;
+    world2cam(1, 1) = m11;
+    world2cam(1, 2) = m12;
+    world2cam(1, 3) = m13;
+    world2cam(2, 0) = m20;
+    world2cam(2, 1) = m21;
+    world2cam(2, 2) = m22;
+    world2cam(2, 3) = m23;
+    world2cam(3, 0) = m30;
+    world2cam(3, 1) = m31;
+    world2cam(3, 2) = m32;
+    world2cam(3, 3) = m33;
 
-    s_cam.GetModelViewMatrix() = T_camera_world;
+    Eigen::Matrix4d cam2world = world2cam.inverse();
+    s_cam.GetModelViewMatrix() = cam2world;
     // Render
     frameBuffer.Bind();
     glPushAttrib(GL_VIEWPORT_BIT);
@@ -204,9 +205,9 @@ int main(int argc, char* argv[]) {
     }
 
     // // Move the camera
-    // T_camera_world = T_camera_world * T_new_old.inverse();
+    // world2cam = world2cam * T_new_old.inverse();
 
-    // s_cam.GetModelViewMatrix() = T_camera_world;
+    // s_cam.GetModelViewMatrix() = world2cam;
   }
   // std::cout << "\rRendering frame " << numFrames << "/" << numFrames << "... done" << std::endl;
 

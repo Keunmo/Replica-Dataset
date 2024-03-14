@@ -9,27 +9,30 @@ make empty cameras.txt and points3D.txt
 
 Input format:
     - CamPose.txt
-        - frame_id, w2c00, w2c01, w2c02, w2c03, w2c10, w2c11, w2c12, w2c13, w2c20, w2c21, w2c22, w2c23, w2c30, w2c31, w2c32, w2c33
+        - frame_id, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33
 Output format:
     - images.txt
         - image_id, qw, qx, qy, qz, tx, ty, tz, camera_id, name
 """
 
-def pose_converter(input_path: Path, output_path: Path) -> int:
+def pose_converter(input_path: Path, output_path: Path, interval: 1) -> int:
     if not output_path.parent.exists():
         output_path.parent.mkdir(parents=True)
     count = 0
     with open(input_path, 'r') as replica_pose:
         with open(output_path, 'w') as colmap_pose:
-            for line in tqdm(replica_pose):
+            for i, line in tqdm(enumerate(replica_pose)):
                 if line.startswith('#'):
                     continue
                 else:
+                    if i % interval != 0:
+                        continue
                     count += 1
                     line = line.strip().split(' ')
                     frame_id = line[0]
-                    c2w = np.array(line[1:]).astype(np.float32).reshape(4, 4)
-                    w2c = np.linalg.inv(c2w)
+                    # c2w = np.array(line[1:]).astype(np.float32).reshape(4, 4)
+                    # w2c = np.linalg.inv(c2w)
+                    w2c = np.array(line[1:]).astype(np.float32).reshape(4, 4)
                     r = w2c[:3, :3]
                     t = w2c[:3, 3]
                     t = -r.T @ t
@@ -49,9 +52,9 @@ if __name__ == "__main__":
     # input_path = Path("/home/keunmo/workspace/Replica-Dataset/output/apartment_1_cam_arr2/camPose.txt")
     # output_path = Path("/home/keunmo/workspace/Replica-Dataset/output/apartment_1_cam_arr2/sparse/model/images.txt")
     # pose_converter(input_path, output_path)
-    dataset_list = ['apartment_1_test', 'room_0_test', 'room_0_cam_arr1', 'room_0_cam_arr2', 'room_0_circle1', 'room_0_slam1']
-    # dataset_list = ['apartment_1_cam_arr1']
+    # dataset_list = ['apartment_1_test', 'room_0_test', 'room_0_cam_arr1', 'room_0_cam_arr2', 'room_0_circle1', 'room_0_slam1']
+    dataset_list = ['apartment_0']
     for dataset in dataset_list:
         input_path = Path(f"/home/keunmo/workspace/Replica-Dataset/output/{dataset}/camPose.txt")
         output_path = Path(f"/home/keunmo/workspace/Replica-Dataset/output/{dataset}/sparse/model/images.txt")
-        pose_converter(input_path, output_path)
+        pose_converter(input_path, output_path, 3)
